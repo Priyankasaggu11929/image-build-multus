@@ -11,7 +11,7 @@ FROM ${GO_IMAGE} AS base-builder
 RUN set -euo pipefail; \
     zypper -n install --no-recommends \
     # file \
-    gcc
+    gcc \
     # git \
     # clang7 \
     # llvm7 \
