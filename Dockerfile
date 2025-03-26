@@ -1,32 +1,42 @@
-ARG GO_IMAGE=rancher/hardened-build-base:v1.21.11b3
+#!UseOBSRepositories
 
-# Image that provides cross compilation tooling.
-FROM --platform=$BUILDPLATFORM rancher/mirrored-tonistiigi-xx:1.5.0 AS xx
+#!BuildTag: rancher/image-build-etcd:v4.2.0
+#!BuildTag: rancher/image-build-etcd:latest
+#!BuildName: image-build-etcd
 
-FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS base-builder
-# copy xx scripts to your build stage
-COPY --from=xx / /
-RUN apk add file make git clang lld patch
-ARG TARGETPLATFORM
-RUN set -x && \
-    xx-apk --no-cache add musl-dev gcc lld 
+ARG GO_IMAGE=rancher/image-build-base:latest
+
+FROM ${GO_IMAGE} AS base-builder
+
+RUN set -euo pipefail; \
+    zypper -n install --no-recommends \
+    # file \
+    gcc
+    # git \
+    # clang7 \
+    # llvm7 \
+    # lld \  
+    musl-gcc \
+    musl-libc-static \
+    patch \
+    make; \
+    zypper -n clean; \
+    rm -rf {/target,}/var/log/{alternatives.log,lastlog,tallylog,zypper.log,zypp/history,YaST2}
+
 
 # Build the multus project
 FROM base-builder AS multus-builder
 ARG TAG=v4.2.0
 ARG SRC=github.com/k8snetworkplumbingwg/multus-cni
 ARG PKG=github.com/k8snetworkplumbingwg/multus-cni
-RUN git clone --depth=1 https://${SRC}.git $GOPATH/src/${PKG}
-WORKDIR $GOPATH/src/${PKG}
-RUN git fetch --all --tags --prune && \
-    git checkout tags/${TAG} -b ${TAG}
-RUN go mod download
-# cross-compilation setup
-ARG TARGETARCH
+ENV C_INCLUDE_PATH="/usr/x86_64-linux-musl/include/:/usr/include/"
+ENV CC="musl-gcc"
 
-RUN xx-go --wrap && \
-    ./hack/build-go.sh
-RUN xx-verify --static bin/thin_entrypoint bin/multus
+COPY multus-cni ${GOPATH}/src/${PKG}
+
+WORKDIR $GOPATH/src/${PKG}
+
+RUN ./hack/build-go.sh
 
 FROM ${GO_IMAGE} AS strip_binary
 #strip needs to run on TARGETPLATFORM, not BUILDPLATFORM
