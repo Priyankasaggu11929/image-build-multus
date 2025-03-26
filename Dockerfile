@@ -1,8 +1,8 @@
 #!UseOBSRepositories
 
-#!BuildTag: rancher/image-build-etcd:v4.2.0
-#!BuildTag: rancher/image-build-etcd:latest
-#!BuildName: image-build-etcd
+#!BuildTag: rancher/image-build-multus:v4.2.0
+#!BuildTag: rancher/image-build-multus:latest
+#!BuildName: image-build-multus
 
 ARG GO_IMAGE=rancher/image-build-base:latest
 
