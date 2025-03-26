@@ -36,7 +36,7 @@ COPY multus-cni ${GOPATH}/src/${PKG}
 
 WORKDIR $GOPATH/src/${PKG}
 
-RUN ./hack/build-go.sh
+RUN sed -i 's|go build |go build -mod=vendor -buildvcs=false |g' ./hack/build-go.sh && ./hack/build-go.sh
 
 FROM ${GO_IMAGE} AS strip_binary
 #strip needs to run on TARGETPLATFORM, not BUILDPLATFORM
