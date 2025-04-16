@@ -1,8 +1,12 @@
 #!UseOBSRepositories
 
-#!BuildTag: rancher/image-build-multus:v4.2.0
-#!BuildTag: rancher/image-build-multus:latest
-#!BuildName: image-build-multus
+#!BuildTag: rancher/hardened-multus-cni:v4.2.0
+#!BuildTag: rancher/hardened-multus-cni:latest
+#!BuildName: hardened-multus-cni
+
+# INFO: image-build-base:latest provides the following:
+# - required packages (make, musl-gcc, musl-libc-static, etc)
+# - set CC, and C_INCLUDE_PATH evironment variables, to enable building with musl libc
 
 ARG GO_IMAGE=rancher/image-build-base:latest
 
@@ -10,16 +14,7 @@ FROM ${GO_IMAGE} AS base-builder
 
 RUN set -euo pipefail; \
     zypper -n install --no-recommends \
-    # file \
-    gcc \
-    # git \
-    # clang7 \
-    # llvm7 \
-    # lld \  
-    musl-gcc \
-    musl-libc-static \
-    patch \
-    make; \
+    patch ; \
     zypper -n clean; \
     rm -rf {/target,}/var/log/{alternatives.log,lastlog,tallylog,zypper.log,zypp/history,YaST2}
 
@@ -29,8 +24,6 @@ FROM base-builder AS multus-builder
 ARG TAG=v4.2.0
 ARG SRC=github.com/k8snetworkplumbingwg/multus-cni
 ARG PKG=github.com/k8snetworkplumbingwg/multus-cni
-ENV C_INCLUDE_PATH="/usr/x86_64-linux-musl/include/:/usr/include/"
-ENV CC="musl-gcc"
 
 COPY multus-cni ${GOPATH}/src/${PKG}
 
