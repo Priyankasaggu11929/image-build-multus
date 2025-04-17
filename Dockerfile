@@ -12,13 +12,6 @@ ARG GO_IMAGE=rancher/image-build-base:latest
 
 FROM ${GO_IMAGE} AS base-builder
 
-RUN set -euo pipefail; \
-    zypper -n install --no-recommends \
-    patch ; \
-    zypper -n clean; \
-    rm -rf {/target,}/var/log/{alternatives.log,lastlog,tallylog,zypper.log,zypp/history,YaST2}
-
-
 # Build the multus project
 FROM base-builder AS multus-builder
 ARG TAG=v4.2.0
